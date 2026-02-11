@@ -63,7 +63,7 @@ watch(() => route, () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <span class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="setting.switchTab">
+                  <span class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="setting.switchLiftTab">
                     <Icon :icon="setting.openLeftSide ? 'codicon:layout-sidebar-left' : 'codicon:layout-sidebar-left-off'" class="size-4.5" />
                   </span>
                 </TooltipTrigger>

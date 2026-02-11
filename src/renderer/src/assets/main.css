@@ -249,3 +249,9 @@ header [data-tauri-drag-region="false"] {
 .magie-selected__0000000 {
     border-color: #007FFF !important;
 }
+
+
+.splitpanes__splitter {
+    background-color: var(--color-gray-100);
+    position: relative;
+}

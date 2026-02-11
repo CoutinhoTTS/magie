@@ -11,17 +11,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import useProject from '@/lib/useProject'
-import useSideSetting from '@/lib/useSideSetting'
 import Menu from './Menu/Menu.vue'
 
 const projectPinia = useProject()
 const searchResult = ref(void 0)
-const setting = useSideSetting()
-const style = computed(() => {
-  return {
-    minWidth: `${setting.defaultLeftSideWidth}px`,
-  }
-})
 
 function addProject() {
   projectPinia.addProject()
@@ -29,7 +22,7 @@ function addProject() {
 </script>
 
 <template>
-  <div :style class="w-full h-full bg-gray-100 pt-10 flex flex-col justify-between items-center overflow-hidden border border-gray-50">
+  <div class="w-full h-full bg-gray-100 pt-10 flex flex-col justify-between items-center overflow-hidden border border-gray-50">
     <div class="px-2 w-full">
       <InputGroup class=" rounded-2xl h-8">
         <InputGroupInput v-model="searchResult" class=" border-0 shadow-none" placeholder="Search" />

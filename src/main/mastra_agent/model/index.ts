@@ -1,4 +1,4 @@
-import { getSelectedModel } from '~/main/SQLite/operation/model'
+import { getSelectedModel } from '~/main/user_db/operation/model'
 import type { MastraModelConfig } from '@mastra/core/llm'
 
 export async function getModel(): Promise<MastraModelConfig | null> {

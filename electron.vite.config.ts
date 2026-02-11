@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import vuejsx from '@vitejs/plugin-vue-jsx'
 import { defineConfig } from 'electron-vite'
+// import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 
 export default defineConfig({
   main: {
@@ -17,9 +18,9 @@ export default defineConfig({
           format: 'es',
         },
       },
-      externalizeDeps: {
-        exclude: ['better-sqlite3'],
-      },
+      // externalizeDeps: {
+      //   exclude: ['better-sqlite3'],
+      // },
     },
   },
   preload: {
@@ -29,9 +30,9 @@ export default defineConfig({
           format: 'es',
         },
       },
-      externalizeDeps: {
-        exclude: ['better-sqlite3'],
-      },
+      // externalizeDeps: {
+      //   exclude: ['better-sqlite3'],
+      // },
     },
   },
   renderer: {

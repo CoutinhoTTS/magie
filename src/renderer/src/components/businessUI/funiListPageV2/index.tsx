@@ -70,7 +70,7 @@ export const propertyConfig = [
         prop: 'label',
         type: 'string',
         defaultValue: 'tab',
-        component: <Input class=" w-[120px]" />,
+        component: <Input class=" w-30" />,
       },
       {
         label: '搜索配置',

@@ -1,8 +1,8 @@
-import type { ResultType } from '../result'
+import type { ResultType } from '../../utils/result'
 import type { ModelItem } from '~/types'
 import { eq } from 'drizzle-orm'
 import db from '../db'
-import Result from '../result'
+import Result from '../../utils/result'
 import * as schema from '../schema'
 
 export async function getAllModels(): Promise<ResultType<ModelItem[]>> {

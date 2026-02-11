@@ -1,7 +1,7 @@
-import type { ResultType } from '../result'
+import type { ResultType } from '../../utils/result'
 import type { LocalSettings } from '~/types'
 import db from '../db'
-import Result from '../result'
+import Result from '../../utils/result'
 import * as schema from '../schema'
 
 export async function getLocalData(): Promise<ResultType<LocalSettings>> {

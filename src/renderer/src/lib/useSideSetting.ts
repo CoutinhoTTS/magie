@@ -1,7 +1,9 @@
 import type { LocalSettings, ResultType } from '~/types'
 import { watchDebounced } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { mid } from '@/utils'
+import useWindowResize from './useWindowResize'
 
 const invoke = window.api.invoke
 
@@ -10,72 +12,35 @@ export default defineStore('side', () => {
   const leftSideWidthPercent = ref(0.0)
   const leftSideWidth = ref(0)
   const fullWidth = ref(window?.innerWidth || 0.0)
-  const defaultLeftSideWidth = 220
+  const defaultLeftSideWidth = 300
   const minHeaderWidth = 140
   const openRightSide = ref(false)
   const openRightSideWidthPercent = ref(0.0)
   const openChatSide = ref(false)
   const openChatSideWidthPercent = ref(0.0)
+  const maxRightWidth = 500
+  const maxChatWidth = 400
+  const rightWidth = ref(0)
+  const chatWidth = ref(0)
+  const rightLimitWidth = 80
+  const leftLimitWidth = 220
 
-  function setLeftWidth(value: number, isPercent = false) {
-    const resultPercent = isPercent ? value : ((value / fullWidth.value) * 100)
-    const result = isPercent ? (value * fullWidth.value) / 100 : value
-    leftSideWidthPercent.value = resultPercent
-    leftSideWidth.value = result < defaultLeftSideWidth ? defaultLeftSideWidth : result
-  }
+  onMounted(() => {
+    useWindowResize(async () => {
+      resize()
+      await nextTick()
+      openLeftSide.value && setLeftWidth(calculateResult(leftSideWidth.value || leftLimitWidth, true))
+      openRightSide.value && setRightSize(calculateResult(rightWidth.value || defaultLeftSideWidth, true))
+      openChatSide.value && setChatSize(calculateResult(chatWidth.value || defaultLeftSideWidth, true))
+    })
+  })
 
-  async function init(value?: number) {
-    if (value === undefined) {
-      await initData()
-      return
-    }
-    setLeftWidth(value || defaultLeftSideWidth)
-    switchBodyPadding()
-  }
-
-  async function resize() {
-    fullWidth.value = window?.innerWidth
-  }
-
-  function switchTab() {
-    openLeftSide.value = !openLeftSide.value
-    if (!openLeftSide.value) {
-      leftSideWidthPercent.value = 0
-    }
-    else {
-      init(leftSideWidth.value)
-    }
-
-    switchBodyPadding()
-  }
-  function switchBodyPadding() {
-
-  }
-  async function switchRightSide(bool?: boolean) {
-    openRightSide.value = bool ?? !openRightSide.value
-  }
-
-  async function switchChatSide(bool?: boolean) {
-    openChatSide.value = bool ?? !openChatSide.value
-  }
-
-  function setRightSize(value: number) {
-    openRightSideWidthPercent.value = value
-  }
-  function setChatSize(value: number) {
-    openChatSideWidthPercent.value = value
-  }
-
-  const defaultRightMinSize = computed(() => {
-    return (300 / fullWidth.value) * 100
+  const defaultRightSideWidthPercent = computed(() => {
+    return (defaultLeftSideWidth / fullWidth.value) * 100
   })
 
   const minLeftSideWidthPercent = computed(() => {
-    if (!openLeftSide.value) {
-      return 0
-    }
-    init(leftSideWidth.value)
-    return (defaultLeftSideWidth / fullWidth.value) * 100
+    return (leftLimitWidth / fullWidth.value) * 100
   })
 
   const minHeaderWidthPercant = computed(() => {
@@ -94,20 +59,89 @@ export default defineStore('side', () => {
   const minHeaderRightSize = computed(() => {
     return 100 - minHeaderSize.value
   })
+
   const rightLimit = computed(() => {
-    return (80 / fullWidth.value) * 100
+    return (rightLimitWidth / fullWidth.value) * 100
   })
+
+  const maxRightPercent = computed(() => {
+    return (maxRightWidth / fullWidth.value) * 100
+  })
+  const maxChatPercent = computed(() => {
+    return (maxChatWidth / fullWidth.value) * 100
+  })
+
+  function calculateResult(value: number): { resultPercent: number, result: number }
+  function calculateResult(value: number, isWidth: boolean): number
+  function calculateResult(value: number, isWidth = false) {
+    if (isWidth) {
+      return (value / fullWidth.value) * 100
+    }
+    const resultPercent = value
+    const result = (value * fullWidth.value) / 100
+    return { resultPercent, result }
+  }
+
+  function setLeftWidth(value?: number) {
+    const { resultPercent, result } = calculateResult(value ?? leftSideWidthPercent.value)
+    leftSideWidthPercent.value = resultPercent
+    leftSideWidth.value = result < defaultLeftSideWidth ? defaultLeftSideWidth : result
+  }
+
+  function switchLiftTab() {
+    openLeftSide.value = !openLeftSide.value
+    if (openLeftSide.value) {
+      setLeftWidth(openRightSideWidthPercent.value)
+    }
+  }
+
+  async function switchRightSide(bool?: boolean) {
+    openRightSide.value = bool ?? !openRightSide.value
+    if (openRightSide.value) {
+      setRightSize(openRightSideWidthPercent.value)
+    }
+  }
+
+  async function switchChatSide(bool?: boolean) {
+    openChatSide.value = bool ?? !openChatSide.value
+    if (openRightSide.value) {
+      setChatSize(openChatSideWidthPercent.value)
+    }
+  }
+
+  function setRightSize(value?: number) {
+    const { resultPercent, result } = calculateResult(value ?? openRightSideWidthPercent.value)
+    openRightSideWidthPercent.value = mid(maxRightPercent.value, resultPercent, rightLimit.value)
+    rightWidth.value = mid(maxRightWidth, result, rightLimitWidth)
+  }
+
+  function setChatSize(value?: number) {
+    const { resultPercent, result } = calculateResult(value ?? openChatSideWidthPercent.value)
+    openChatSideWidthPercent.value = mid(maxChatPercent.value, resultPercent, rightLimit.value)
+    chatWidth.value = mid(maxChatWidth, result, rightLimitWidth)
+  }
 
   async function initData() {
     const result = await invoke<ResultType<LocalSettings>>('get_local_data')
     if (result.status && result.data) {
-      openLeftSide.value = result.data.open_left_side
-      leftSideWidthPercent.value = result.data.left_side_width_percent || 0.0
-      openRightSide.value = result.data.open_right_side
-      openChatSide.value = result.data.open_chat_side
-      openRightSideWidthPercent.value = Math.max(Number(result.data.open_right_side_width_percent || 0), defaultRightMinSize.value || 0)
-      openChatSideWidthPercent.value = Math.max(Number(result.data.open_chat_side_width_percent || 0), defaultRightMinSize.value || 0)
+      openLeftSide.value = result?.data?.open_left_side || true
+      leftSideWidthPercent.value = result?.data?.left_side_width_percent || minLeftSideWidthPercent.value
+      openRightSide.value = result?.data?.open_right_side || false
+      openChatSide.value = result?.data?.open_chat_side || false
+      openRightSideWidthPercent.value = result?.data?.open_right_side_width_percent || defaultRightSideWidthPercent.value
+      openChatSideWidthPercent.value = result.data.open_chat_side_width_percent || defaultRightSideWidthPercent.value
+      setLeftWidth(leftSideWidthPercent.value)
+      setRightSize(openRightSideWidthPercent.value)
+      setChatSize(openChatSideWidthPercent.value)
     }
+  }
+
+  async function init() {
+    initData()
+  }
+
+  async function resize() {
+    fullWidth.value = window?.innerWidth
   }
   watchDebounced([
     () => openLeftSide.value,
@@ -117,19 +151,17 @@ export default defineStore('side', () => {
     () => openRightSideWidthPercent.value,
     () => openChatSideWidthPercent.value,
   ], () => {
-    const open_right_side_width_percent = openRightSide.value ? openRightSideWidthPercent.value : Math.max(openRightSideWidthPercent.value, defaultRightMinSize.value)
-    const open_chat_side_width_percent = openChatSide.value ? openChatSideWidthPercent.value : Math.max(openChatSideWidthPercent.value, defaultRightMinSize.value)
     invoke('set_local_data', {
       params: {
         open_left_side: openLeftSide.value,
         left_side_width_percent: leftSideWidthPercent.value,
         open_right_side: openRightSide.value,
         open_chat_side: openChatSide.value,
-        open_right_side_width_percent,
-        open_chat_side_width_percent,
+        open_right_side_width_percent: openRightSideWidthPercent.value,
+        open_chat_side_width_percent: openChatSideWidthPercent.value,
       },
     })
   }, { debounce: 200 })
 
-  return { leftSideWidthPercent, minLeftSideWidthPercent, setLeftWidth, init, defaultLeftSideWidth, switchTab, openLeftSide, resize, minHeaderSize, minHeaderRightSize, openRightSide, switchRightSide, openChatSide, switchChatSide, openRightSideWidthPercent, openChatSideWidthPercent, defaultRightMinSize, setRightSize, setChatSize, rightLimit }
+  return { leftSideWidthPercent, minLeftSideWidthPercent, setLeftWidth, init, defaultLeftSideWidth, switchLiftTab, openLeftSide, resize, minHeaderSize, minHeaderRightSize, openRightSide, switchRightSide, openChatSide, switchChatSide, openRightSideWidthPercent, openChatSideWidthPercent, setRightSize, setChatSize, rightLimit, maxRightPercent, maxChatPercent }
 })

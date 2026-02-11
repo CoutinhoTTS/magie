@@ -18,7 +18,7 @@ export const propertyConfig = [
     prop: 'label',
     type: 'string',
     isTop: true,
-    component: <Input class=" w-[120px]" />,
+    component: <Input class=" w-30" />,
   },
   {
     label: '输入类型',
@@ -26,8 +26,8 @@ export const propertyConfig = [
     type: 'string',
     component: (
       <Select
-        class="w-[120px]"
-        triggerClass="w-[120px]"
+        class="w-30"
+        triggerClass="w-30"
         options={[{
           label: '文本',
           value: 'text',
@@ -39,7 +39,7 @@ export const propertyConfig = [
     label: '输入框占位文本',
     prop: 'placeholder',
     type: 'string',
-    component: <Input class=" w-[120px]" />,
+    component: <Input class=" w-30" />,
   },
   {
     label: '是否显示清除按钮',

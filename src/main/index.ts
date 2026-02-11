@@ -4,14 +4,16 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import init_user_DB from './user_db'
+import init_chat_DB from './chat_db'
 import init_mastra from './mastra_agent'
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    // width: 900,
+    // height: 670,
     show: false,
+    maximizable: true,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     frame: false,
@@ -24,6 +26,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.maximize()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -33,6 +36,7 @@ function createWindow(): void {
 
   // Add context menu for development
   if (is.dev) {
+    // mainWindow.webContents.openDevTools()
     mainWindow.webContents.on('context-menu', (_event, params) => {
       const contextMenu = Menu.buildFromTemplate([
         {
@@ -80,6 +84,7 @@ app.whenReady().then(() => {
   // ipcMain.on('ping', () => console.log('pong'))
 
   init_user_DB()
+  init_chat_DB()
   init_mastra()
   createWindow()
 

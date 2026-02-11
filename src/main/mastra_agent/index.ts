@@ -3,9 +3,9 @@ import { mastra } from './mastra'
 import { getModel } from './model'
 export default function () {
     let controller: AbortController | null = null;
-    ipcMain.handle('agent_chat', async (event, message) => {
+    ipcMain.handle('agent_chat', async (event, option) => {
         let count = 0
-        if (message === false && controller) {
+        if (option === false && controller) {
             controller.abort()
             return
         }
@@ -16,13 +16,20 @@ export default function () {
             throw new Error('No model found')
         }
 
+        const workflow = mastra.getWorkflowById('page-workflow')
         const agent = mastra.getAgentById('page-agent')
         agent.__updateModel({ model })
         async function streamCall() {
+            const { message, currentProperty, pageDesignData } = option
+            console.log('currentProperty',currentProperty)
+            
             const stream = await agent.stream(message, {
                 abortSignal: controller?.signal,
                 onFinish: () => {
                     wc.send('llm:finished')
+                },
+                onChunk: (chunk) => {
+                    wc.send('llm:streaming', chunk)
                 },
                 onError: ({ error }: { error: any }) => {
                     count++
@@ -39,9 +46,9 @@ export default function () {
                 },
 
             })
-            for await (const chunk of stream.textStream) {
-                wc.send('llm:streaming', chunk)
-            }
+            const full = await stream.getFullOutput()
+            wc.send('llm:full', full)
+
         }
         streamCall()
 
