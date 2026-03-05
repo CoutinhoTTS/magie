@@ -10,15 +10,19 @@ import 'splitpanes/dist/splitpanes.css'
 const route = useRoute()
 const setting = useSideSetting()
 
-const firstPaneSize = computed(() => {
-  return (keyName: 'openChatSide' | 'openRightSide') => {
-    if (setting[keyName])
-      return 100 - setting[`${keyName}WidthPercent`]
-    return 100
-  }
+const firstChatPaneSize = computed(() => {
+  if (setting.openChatSide)
+    return 100 - setting.chatSideWidthPercent
+  return 100
 })
 
-function handleResize({ panes, type}: { panes: Array<{ size: number }>, type: 'setRightSize' | 'setChatSize' }) {
+const firstRightPaneSize = computed(() => {
+  if (setting.openRightSide)
+    return 100 - setting.rightSideWidthPercent
+  return 100
+})
+
+function handleResize({ panes, type}: { panes: Array<{ size: number }>, type: 'setRightSideWidth' | 'setChatSideWidth' }) {
   if (panes[panes.length - 1]) {
     setting[type](panes[panes.length - 1].size)
   }
@@ -38,28 +42,28 @@ watch(() => route.name, (val) => {
       @resize="({ panes }) => {
         handleResize({
           panes,
-          type: 'setChatSize',
+          type: 'setChatSideWidth',
         })
       }"
     >
-      <Pane :size="firstPaneSize('openChatSide')">
+      <Pane :size="firstChatPaneSize">
         <Splitpanes
           @resize="({ panes }) => {
             handleResize({
               panes,
-              type: 'setRightSize',
+              type: 'setRightSideWidth',
             })
           }"
         >
-          <Pane :size="firstPaneSize('openRightSide')">
+          <Pane :size="firstRightPaneSize">
             <div class="w-full h-full">
               <router-view />
             </div>
           </Pane>
           <Pane
             v-if="setting.openRightSide"
-            :size="setting.openRightSideWidthPercent"
-            :min-size="setting.rightLimit"
+            :size="setting.rightSideWidthPercent"
+            :min-size="setting.minRightSideWidthPercent"
             :max-size="setting.maxRightPercent"
           >
             <PropertyPanel />
@@ -68,11 +72,10 @@ watch(() => route.name, (val) => {
       </Pane>
       <Pane
         v-if="setting.openChatSide"
-        :size="setting.openChatSideWidthPercent"
-        :min-size="setting.rightLimit"
+        :size="setting.chatSideWidthPercent"
+        :min-size="setting.minChatSideWidthPercent"
         :max-size="setting.maxChatPercent"
       >
-        {{ setting.openChatSideWidthPercent }}
         <Chat />
       </Pane>
     </Splitpanes>

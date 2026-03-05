@@ -37,8 +37,8 @@ function handleStop() {
 </script>
 
 <template>
-  <div class="w-full h-full overflow-hidden flex flex-col justify-between items-center relative">
-    <ChatHeader @new-chat="addNewChat" @set-session-id="setSessionId" />
+  <div class="w-full h-full overflow-hidden flex flex-col justify-between items-center relative text-sm">
+    <ChatHeader v-if="!model.settingModel" @new-chat="addNewChat" @set-session-id="setSessionId" />
     <ChatMessageList
       :messages="chatStore.messages"
       :is-streaming="isStreaming"

@@ -1,8 +1,8 @@
 import type { ResultType } from '../../utils/result'
 import type { ChatMessageItem } from '~/types'
 import { eq } from 'drizzle-orm'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 /**
@@ -74,5 +74,3 @@ export async function getMessagesBySession(_event: any, { session_id }: { sessio
     message: error,
   })
 }
-
-

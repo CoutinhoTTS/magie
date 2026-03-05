@@ -7,6 +7,6 @@
     "antfu.pnpm-catalog-lens",
     "dbaeumer.vscode-eslint",
     "tauri-apps.tauri-vscode",
-    "rust-lang.rust-analyzer",
+    "rust-lang.rust-analyzer"
   ]
 }

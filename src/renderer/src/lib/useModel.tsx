@@ -44,16 +44,20 @@ export default defineStore('model', () => {
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Provider</SelectLabel>
-              <SelectItem value="OpenAI">
-                OpenAI compatible
+              <SelectItem value="zhipuai">
+                Zhipu
               </SelectItem>
-              <SelectItem value="Anthropic">
-                Anthropic compatible
+              <SelectItem value="kimi-for-coding">
+                Kimi
               </SelectItem>
-              <SelectItem value="Google">
-                Google compatible
+              <SelectItem value="openai">
+                Openai
+              </SelectItem>
+              <SelectItem value="openrouter">
+                Openrouter
               </SelectItem>
             </SelectGroup>
+
           </SelectContent>
         </Select>
       ),

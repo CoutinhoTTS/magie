@@ -5,7 +5,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 // Custom APIs for renderer
 const api = {
-  invoke: (channel: string, ...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
+  invoke: (channel: string, ...args: unknown[]) => ipcRenderer.invoke(channel, ...args),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

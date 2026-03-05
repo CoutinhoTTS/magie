@@ -1,21 +1,21 @@
-import { ElButton } from './button'
-import { ElCheckbox } from './checkbox'
-import { ElCheckboxGroup } from './checkboxGroup'
-import { ElDatePicker } from './datePicker'
+import { ElButton } from './elButton'
+import { ElCheckbox } from './elCheckbox'
+import { ElCheckboxGroup } from './elCheckboxGroup'
+import { ElDatePicker } from './elDatePicker'
+import { ElInput, defaultProps as ElInputDefaultProps, propertyConfig as ElInputPropertyConfig } from './elInput'
+import { ElSelect } from './elSelect'
+import { ElSwitch } from './elSwitch'
+import { ElTreeSelect } from './elTreeSelect'
 import FuniCurd from './funiCurd'
 import { FuniDetail } from './funiDetail'
 import FuniForm from './funiForm'
 import { FuniListPageV2, defaultProps as FuniListPageV2DefaultProps, propertyConfig as FuniListPageV2PropertyConfig } from './funiListPageV2'
 import { FuniRegion } from './funiRegion'
 // import { FuniRUOC } from './funiRUOC'
-import { ElInput, defaultProps as ElInputDefaultProps, propertyConfig as ElInputPropertyConfig } from './input'
-import { ElSelect } from './select'
-import { ElSwitch } from './switch'
-import { ElTreeSelect } from './treeSelect'
 
 const components = [
   {
-    name: 'Buttons',
+    name: 'ElButtons',
     component: (
       <ElButton />
     ),

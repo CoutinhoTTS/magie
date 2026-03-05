@@ -1,8 +1,8 @@
 import type { ResultType } from '../../utils/result'
 import type { ModelItem } from '~/types'
 import { eq } from 'drizzle-orm'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 export async function getAllModels(): Promise<ResultType<ModelItem[]>> {
@@ -34,14 +34,14 @@ export async function getAllModels(): Promise<ResultType<ModelItem[]>> {
 
 export async function getSelectedModel(): Promise<ResultType<ModelItem>> {
   const result = new Result<ModelItem>()
-  let model: ModelItem | null = null;
+  let model: ModelItem | null = null
   let status = true
   let error = ''
   try {
     const models = await db.select().from(schema.models).where(({ selected }) => eq(selected, true))
     model = models
       ?.filter
-      ?.((_, i) => i == 0)
+      ?.((_, i) => i === 0)
       ?.map
       ?.(m => ({
         id: m.id,
@@ -63,8 +63,6 @@ export async function getSelectedModel(): Promise<ResultType<ModelItem>> {
     message: error,
   })
 }
-
-
 
 export async function setModelValue(_event: any, { model }: { model: ModelItem }): Promise<ResultType<ModelItem>> {
   const result = new Result<ModelItem>()

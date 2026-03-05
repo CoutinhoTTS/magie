@@ -25,7 +25,7 @@ export const models = sqliteTable('models', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   url: text('url').notNull(),
-  compatible_type: text('compatible_type', { enum: ['OpenAI', 'Anthropic', 'Google'] }).notNull(),
+  compatible_type: text('compatible_type').notNull(),
   api_key: text('api_key').notNull(),
   selected: integer('selected', { mode: 'boolean' }).notNull().default(false),
   created_at: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
@@ -34,11 +34,11 @@ export const models = sqliteTable('models', {
 
 export const localSettings = sqliteTable('local', {
   open_left_side: integer('open_left_side', { mode: 'boolean' }),
-  left_side_width_percent: integer('left_side_width_percent'),
+  left_side_width: integer('left_side_width'),
   open_right_side: integer('open_right_side', { mode: 'boolean' }),
-  open_right_side_width_percent: integer('open_right_side_width_percent'),
+  right_side_width: integer('right_side_width'),
   open_chat_side: integer('open_chat_side', { mode: 'boolean' }),
-  open_chat_side_width_percent: integer('open_chat_side_width_percent'),
+  chat_side_width: integer('chat_side_width'),
 })
 
 export type Project = typeof projects.$inferSelect

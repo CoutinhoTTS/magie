@@ -21,8 +21,8 @@
     { "rule": "*quotes", "severity": "off" },
     { "rule": "*semi", "severity": "off" }
   ],
-  "tailwindCSS.includeLanguages":{
-     "vue": "html",
+  "tailwindCSS.includeLanguages": {
+    "vue": "html"
   },
 
   // Enable eslint for all supported languages

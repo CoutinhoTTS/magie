@@ -252,6 +252,17 @@ header [data-tauri-drag-region="false"] {
 
 
 .splitpanes__splitter {
-    background-color: var(--color-gray-100);
+    background-color: var(--border);
     position: relative;
+    left: -1px;
 }
+
+/* 拖拽时全局 cursor - 通过 JavaScript 添加类 */
+body.is-splitpanes-dragging {
+    cursor: col-resize !important;
+}
+
+body.is-splitpanes-dragging * {
+    cursor: col-resize !important;
+}
+

@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { computed } from 'vue'
-import components from '@/components/businessUI/index.tsx'
-import useProperty from '@/lib/useProperty.ts'
+import components from '@/components/businessUI'
+import useProperty from '@/lib/useProperty'
 import ChildrenEditor from './ChildrenEditor.vue'
 import PropertyField from './PropertyField.vue'
 import { getNestedValue, setNestedValue } from './utils'

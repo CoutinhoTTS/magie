@@ -1,7 +1,7 @@
 import type { ResultType } from '../../utils/result'
 import type { ProjectNode } from '~/types'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 export async function getProjects(): Promise<ResultType<ProjectNode[]>> {

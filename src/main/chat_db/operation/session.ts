@@ -1,14 +1,13 @@
 import type { ResultType } from '../../utils/result'
 import type { SessionSummaryItem } from '~/types'
 import { desc, eq, like } from 'drizzle-orm'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 /**
  * Save or update session summary using upsert
  */
-
 
 function mapSummary(val: SessionSummaryItem) {
   return {
@@ -24,7 +23,7 @@ export async function saveSessionSummary(_event: any, parmas: { session_id?: num
   let status = true
   let message = 'success'
   let savedSummary: SessionSummaryItem | null = null
-  const session_id = parmas?.session_id;
+  const session_id = parmas?.session_id
   Reflect.deleteProperty(parmas, 'session_id')
   try {
     const [saved] = await db.insert(schema.sessionSummary)
@@ -112,4 +111,3 @@ export async function getSessionList(_event: any, params: { pageNo: number, page
     message: error,
   })
 }
-

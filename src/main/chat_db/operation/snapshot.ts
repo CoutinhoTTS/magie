@@ -1,8 +1,8 @@
 import type { ResultType } from '../../utils/result'
 import type { SnapshotItem } from '~/types'
-import { eq, desc } from 'drizzle-orm'
-import db from '../db'
+import { desc, eq } from 'drizzle-orm'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 /**

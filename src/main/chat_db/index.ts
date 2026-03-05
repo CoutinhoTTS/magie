@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
+import * as cursor from './operation/cursor'
 import * as message from './operation/message'
 import * as session from './operation/session'
-import * as cursor from './operation/cursor'
 import * as snapshot from './operation/snapshot'
 
 // Register all IPC handlers

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue'
 import { Search } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -33,7 +33,7 @@ function addProject() {
     </div>
     <div class="w-full h-full pt-40px flex-1 flex flex-col justify-start items-center">
       <div class="w-full px-2 pt-2 border-b flex justify-between items-center">
-        <div class="text-xs opacity-50 font-bold">
+        <div class="text-xs opacity-50 font-bold text-nowrap overflow-hidden ">
           PROJECT GROUPS
         </div>
         <TooltipProvider :delay-duration="800">

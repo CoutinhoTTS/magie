@@ -2,14 +2,21 @@ import { Mastra } from '@mastra/core/mastra'
 import { LibSQLStore } from '@mastra/libsql'
 import { PinoLogger } from '@mastra/loggers'
 import { CloudExporter, DefaultExporter, Observability, SensitiveDataFilter } from '@mastra/observability'
-import { pageAgent } from './agents/page-agent'
-import { pageWorkflow } from './workflows/page-workflow'
 import { app } from 'electron'
+import { chatAgent } from './agents/chat-agent'
+import { intentClassifierAgent } from './agents/intent-classifier-agent'
+import { intentParserAgent } from './agents/intent-parser-agent'
+import { keywordExtractorAgent } from './agents/keyword-extractor-agent'
+import { pageAgent } from './agents/page-agent'
+import { chatWorkflow } from './workflows/chat'
+import { gatewayWorkflow } from './workflows/gateway'
+import { pageWorkflow } from './workflows/page'
+
 const userDataPath = app.getPath('userData')
 
 export const mastra = new Mastra({
-  workflows: { pageWorkflow },
-  agents: { pageAgent },
+  workflows: { gatewayWorkflow, chatWorkflow, pageWorkflow },
+  agents: { pageAgent, intentClassifierAgent, chatAgent, intentParserAgent, keywordExtractorAgent },
   storage: new LibSQLStore({
     id: 'mastra-storage',
     // 存储可观测性、评分等数据
@@ -36,4 +43,3 @@ export const mastra = new Mastra({
     },
   }),
 })
-

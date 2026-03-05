@@ -50,7 +50,6 @@ export function useChat(): UseChatReturn {
   })
 
   let ipcRenderer: IpcRenderer | null = null
-
   onMounted(() => {
     ipcRenderer = window.electron.ipcRenderer
     ipcRenderer.on('llm:streaming', streamingChunk)
@@ -58,11 +57,18 @@ export function useChat(): UseChatReturn {
     ipcRenderer.on('llm:full', streamFull)
     ipcRenderer.on('llm:error', streamError)
     ipcRenderer.on('llm:abort', streamAbort)
+    ipcRenderer.on('workflow:confirm_modify', workflowConfirmModify)
   })
 
-  // function generateId() {
-  //   return (window as any)?.$utils?.guid()
-  // }
+  async function workflowConfirmModify(_event: any, data: { runId: string, stepId: string, patch: any, summary: string }) {
+    // 测试：直接确认并恢复工作流
+    const invoke = window.api.invoke
+    // const result =
+    await invoke('workflow:resume', {
+      runId: data.runId,
+      resumeData: { confirmed: true },
+    })
+  }
 
   const placeholder = computed(() => isEmpty.value ? 'Chat' : void 0)
 
@@ -164,13 +170,15 @@ export function useChat(): UseChatReturn {
   }
 
   async function streamingChunk(_, chunk) {
-    const { payload: { text } } = chunk
+    // const { payload: { text } } = chunk
     const assistantIndex = chatStore.getAssistantIndex({
       state: ['ing', 'no'],
     })
 
-    chatStore.localMessagePushChunk(text, assistantIndex)
+    chatStore.localMessagePushChunk(chunk, assistantIndex)
+
     await nextTick()
+
     scrollToBottom()
   }
 

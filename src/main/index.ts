@@ -3,9 +3,9 @@ import process from 'node:process'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
-import init_user_DB from './user_db'
 import init_chat_DB from './chat_db'
-import init_mastra from './mastra_agent'
+import {init_mastra} from './mastra_ai'
+import init_user_DB from './user_db'
 
 function createWindow(): void {
   // Create the browser window.
@@ -87,7 +87,6 @@ app.whenReady().then(() => {
   init_chat_DB()
   init_mastra()
   createWindow()
-
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the

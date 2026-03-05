@@ -23,7 +23,7 @@ export const summaryCursor = sqliteTable('summary_cursor', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   session_id: integer('session_id').notNull(),
   last_message_id: integer('last_message_id').notNull(),
-}, (table) => ({
+}, table => ({
   sessionIdx: uniqueIndex('summary_cursor_session_id_idx').on(table.session_id),
 }))
 
@@ -33,7 +33,6 @@ export const workingMemorySnapshot = sqliteTable('working_memory_snapshot', {
   snapshot_json: text('snapshot_json', { mode: 'json' }).notNull().default('{}'),
   created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 })
-
 
 export type ChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert

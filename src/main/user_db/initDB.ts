@@ -46,11 +46,11 @@ export function initLocalDB(sqlite) {
   sqlite.prepare(`
   CREATE TABLE IF NOT EXISTS local (
      open_left_side BOOLEAN,
-     left_side_width_percent INTEGER,
-     open_right_side BOOLEAN, 
-     open_right_side_width_percent INTEGER,
+     left_side_width INTEGER,
+     open_right_side BOOLEAN,
+     right_side_width INTEGER,
      open_chat_side BOOLEAN,
-     open_chat_side_width_percent INTEGER
+     chat_side_width INTEGER
  )
 `).run()
 }

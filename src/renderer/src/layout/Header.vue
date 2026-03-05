@@ -49,50 +49,52 @@ watch(() => route, () => {
   deep: true,
   immediate: true,
 })
+
+const headerButtons = [
+  {
+    key: 'side',
+    get icon() {
+      return setting.openLeftSide ? 'codicon:layout-sidebar-left' : 'codicon:layout-sidebar-left-off'
+    },
+    onClick: () => setting.switchLeftSide(),
+    tooltip: 'side',
+  },
+  {
+    key: 'property',
+    get icon() {
+      return setting.openRightSide ? 'codicon:layout-sidebar-right' : 'codicon:layout-sidebar-right-off'
+    },
+    onClick: () => setting.switchRightSide(undefined),
+    tooltip: 'property',
+    get show() {
+      return route.name === 'design'
+    },
+  },
+  {
+    key: 'pages',
+    icon: 'carbon:page-break',
+    onClick: switchPages,
+    tooltip: 'pages',
+  },
+  {
+    key: 'chat',
+    icon: 'akar-icons:chat-dots',
+    onClick: () => setting.switchChatSide(undefined),
+    tooltip: 'chat',
+  },
+]
 </script>
 
 <template>
   <header class="w-full h-8 flex justify-between items-center absolute top-0 left-0 z-1 select-none titlebar border-b bg-background">
-    <div
-      class="h-full w-full flex "
-    >
-      <div class="h-full" :style="{ width: setting.openLeftSide ? `${setting.leftSideWidthPercent}%` : `${setting.minHeaderSize}%` }">
-        <div class=" h-full w-full flex justify-end items-center">
-          <!-- <WindowControls class="h-full flex items-center" /> -->
-          <div class="flex justify-end items-center gap-2 h-max pr-2 relative ">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="setting.switchLiftTab">
-                    <Icon :icon="setting.openLeftSide ? 'codicon:layout-sidebar-left' : 'codicon:layout-sidebar-left-off'" class="size-4.5" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>side</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="switchPages">
-                    <Icon icon="iconoir:multiple-pages" class="size-4.5" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>pages</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+    <div class="h-full w-full">
+      <div data-tauri-drag-region class="h-full flex justify-center items-center  px-4 relative">
+        <div class=" font-bold pointer-events-none">
+          {{ route.meta?.title || 'FUNI DESIGN' }}
         </div>
-      </div>
-      <div class="h-full" :style="{ width: setting.openLeftSide ? `${100 - setting.leftSideWidthPercent}%` : `${100 - setting.minHeaderSize}%` }">
-        <div data-tauri-drag-region class="h-full flex justify-center items-center  px-4 relative">
-          <div class=" font-bold pointer-events-none">
-            {{ route.meta?.title || 'FUNI DESIGN' }}
-          </div>
-          <div class=" h-full py-1 absolute left-4">
+
+        <div class=" h-full absolute right-4 flex justify-center items-center gap-2">
+          <div class="h-full py-1">
             <ul class="h-full flex justify-between items-center border rounded-2xl">
               <TooltipProvider>
                 <Tooltip>
@@ -122,44 +124,34 @@ watch(() => route, () => {
               </TooltipProvider>
             </ul>
           </div>
-          <div class=" h-full absolute right-4 flex justify-center items-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span v-show="route.name === 'design'" class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="setting.switchRightSide(undefined)">
-                    <Icon :icon="setting.openRightSide ? 'codicon:layout-sidebar-right' : 'codicon:layout-sidebar-right-off'" class="size-4.5" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>property</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="inline-block cursor-pointer relative size-4.5 btn" @click.stop="setting.switchChatSide(undefined)">
-                    <Icon icon="akar-icons:chat-dots" class="size-4.5" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>chat</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <span class="inline-block cursor-pointer relative size-4.5 btn">
-                  <Icon icon="uil:setting" class="size-4.5" />
+          <TooltipProvider v-for="btn in headerButtons" :key="btn.key">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span
+                  v-show="btn.show ?? true"
+                  class="inline-block cursor-pointer relative size-4.5 btn"
+                  @click.stop="btn.onClick"
+                >
+                  <Icon :icon="btn.icon" class="size-4.5" />
                 </span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem class="btn" @click.stop="setingModel">
-                  模型设置
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{{ btn.tooltip }}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <span class="inline-block cursor-pointer relative size-4.5 btn">
+                <Icon icon="uil:setting" class="size-4.5" />
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem class="btn" @click.stop="setingModel">
+                模型设置
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

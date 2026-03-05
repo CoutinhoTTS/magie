@@ -1,7 +1,8 @@
+import type { Ref } from 'vue'
 import type { LocalSettings, ResultType } from '~/types'
 import { watchDebounced } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { mid } from '@/utils'
 import useWindowResize from './useWindowResize'
 
@@ -9,159 +10,216 @@ const invoke = window.api.invoke
 
 export default defineStore('side', () => {
   const openLeftSide = ref(true)
-  const leftSideWidthPercent = ref(0.0)
   const leftSideWidth = ref(0)
   const fullWidth = ref(window?.innerWidth || 0.0)
-  const defaultLeftSideWidth = 300
-  const minHeaderWidth = 140
+  const defaultRightSideWidth = 300
   const openRightSide = ref(false)
-  const openRightSideWidthPercent = ref(0.0)
   const openChatSide = ref(false)
-  const openChatSideWidthPercent = ref(0.0)
   const maxRightWidth = 500
   const maxChatWidth = 400
-  const rightWidth = ref(0)
-  const chatWidth = ref(0)
-  const rightLimitWidth = 80
-  const leftLimitWidth = 220
+  const maxLiftWidth = 400
+  const rightSideWidth = ref(0)
+  const chatSideWidth = ref(0)
+  const minRightSideWidth = 80
+  const minLeftSideWidth = 220
+  const timer = 250
+  const disabledStates = reactive({
+    left: false,
+    right: false,
+    chat: false,
+  })
 
   onMounted(() => {
     useWindowResize(async () => {
       resize()
-      await nextTick()
-      openLeftSide.value && setLeftWidth(calculateResult(leftSideWidth.value || leftLimitWidth, true))
-      openRightSide.value && setRightSize(calculateResult(rightWidth.value || defaultLeftSideWidth, true))
-      openChatSide.value && setChatSize(calculateResult(chatWidth.value || defaultLeftSideWidth, true))
     })
   })
 
-  const defaultRightSideWidthPercent = computed(() => {
-    return (defaultLeftSideWidth / fullWidth.value) * 100
+  const leftSideWidthPercent = computed(() => {
+    return (leftSideWidth.value / fullWidth.value) * 100
+  })
+
+  // Available width for chat side (full width minus left panel)
+  const chatAvailableWidth = computed(() => {
+    return Math.max(
+      fullWidth.value - (openLeftSide.value ? leftSideWidth.value : 0),
+      1,
+    )
+  })
+
+  // Available width for right side (full width minus left and chat panels)
+  const rightAvailableWidth = computed(() => {
+    return Math.max(
+      fullWidth.value
+      - (openLeftSide.value ? leftSideWidth.value : 0)
+      - (openChatSide.value ? chatSideWidth.value : 0),
+      1,
+    )
+  })
+
+  const rightSideWidthPercent = computed(() => {
+    return (rightSideWidth.value / rightAvailableWidth.value) * 100
+  })
+
+  const chatSideWidthPercent = computed(() => {
+    return (chatSideWidth.value / chatAvailableWidth.value) * 100
   })
 
   const minLeftSideWidthPercent = computed(() => {
-    return (leftLimitWidth / fullWidth.value) * 100
+    if (disabledStates.left)
+      return 0
+    return (minLeftSideWidth / fullWidth.value) * 100
   })
 
-  const minHeaderWidthPercant = computed(() => {
-    return (minHeaderWidth / fullWidth.value) * 100
+  const minRightSideWidthPercent = computed(() => {
+    if (disabledStates.right)
+      return 0
+    return (minRightSideWidth / rightAvailableWidth.value) * 100
   })
 
-  const minHeaderSize = computed(() => {
-    if (openLeftSide.value) {
-      return leftSideWidthPercent.value
-    }
-    else {
-      return minHeaderWidthPercant.value
-    }
-  })
-
-  const minHeaderRightSize = computed(() => {
-    return 100 - minHeaderSize.value
-  })
-
-  const rightLimit = computed(() => {
-    return (rightLimitWidth / fullWidth.value) * 100
+  const minChatSideWidthPercent = computed(() => {
+    if (disabledStates.chat)
+      return 0
+    return (minRightSideWidth / chatAvailableWidth.value) * 100
   })
 
   const maxRightPercent = computed(() => {
-    return (maxRightWidth / fullWidth.value) * 100
+    return (maxRightWidth / rightAvailableWidth.value) * 100
   })
+
   const maxChatPercent = computed(() => {
-    return (maxChatWidth / fullWidth.value) * 100
+    return (maxChatWidth / chatAvailableWidth.value) * 100
+  })
+  const maxLiftPercent = computed(() => {
+    return (maxLiftWidth / fullWidth.value) * 100
   })
 
-  function calculateResult(value: number): { resultPercent: number, result: number }
-  function calculateResult(value: number, isWidth: boolean): number
-  function calculateResult(value: number, isWidth = false) {
-    if (isWidth) {
-      return (value / fullWidth.value) * 100
+  function setLeftSideWidth(percent?: number) {
+    const pixelValue = ((percent ?? leftSideWidthPercent.value) * fullWidth.value) / 100
+    leftSideWidth.value = mid(minLeftSideWidth, pixelValue, 500)
+  }
+
+  // 通用的切换函数创建器
+  function createSwitchFn(
+    side: 'left' | 'right' | 'chat',
+    options: {
+      openState: Ref<boolean>
+      widthState: Ref<number>
+      defaultWidth: number
+      widthKey: 'left_side_width' | 'right_side_width' | 'chat_side_width'
+    },
+  ) {
+    return async function (forceState?: boolean) {
+      const newState = forceState ?? !options.openState.value
+      disabledStates[side] = true
+
+      await nextTick()
+      options.widthState.value = 0
+      if (newState) {
+        options.openState.value = true
+        await nextTick()
+        await resetWidth()
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            disabledStates[side] = false
+            resolve(null)
+          }, timer)
+        })
+      }
+      else {
+        await new Promise((resolve) => {
+          setTimeout(async () => {
+            await resetWidth()
+            options.openState.value = false
+            disabledStates[side] = false
+            resolve(null)
+          }, timer)
+        })
+      }
+
+      async function resetWidth() {
+        const { data } = await invoke<ResultType<LocalSettings>>('get_local_data')
+        options.widthState.value = data?.[options.widthKey] || options.defaultWidth
+      }
+      saveLocalData()
     }
-    const resultPercent = value
-    const result = (value * fullWidth.value) / 100
-    return { resultPercent, result }
   }
 
-  function setLeftWidth(value?: number) {
-    const { resultPercent, result } = calculateResult(value ?? leftSideWidthPercent.value)
-    leftSideWidthPercent.value = resultPercent
-    leftSideWidth.value = result < defaultLeftSideWidth ? defaultLeftSideWidth : result
+  // 使用工厂函数创建三个 switch 函数
+  const switchLeftSide = createSwitchFn('left', {
+    openState: openLeftSide,
+    widthState: leftSideWidth,
+    defaultWidth: minLeftSideWidth,
+    widthKey: 'left_side_width',
+  })
+
+  const switchRightSide = createSwitchFn('right', {
+    openState: openRightSide,
+    widthState: rightSideWidth,
+    defaultWidth: defaultRightSideWidth,
+    widthKey: 'right_side_width',
+  })
+
+  const switchChatSide = createSwitchFn('chat', {
+    openState: openChatSide,
+    widthState: chatSideWidth,
+    defaultWidth: defaultRightSideWidth,
+    widthKey: 'chat_side_width',
+  })
+
+  function setRightSideWidth(percent?: number) {
+    const pixelValue = ((percent ?? rightSideWidthPercent.value) * rightAvailableWidth.value) / 100
+    rightSideWidth.value = mid(maxRightWidth, pixelValue, minRightSideWidth)
   }
 
-  function switchLiftTab() {
-    openLeftSide.value = !openLeftSide.value
-    if (openLeftSide.value) {
-      setLeftWidth(openRightSideWidthPercent.value)
-    }
-  }
-
-  async function switchRightSide(bool?: boolean) {
-    openRightSide.value = bool ?? !openRightSide.value
-    if (openRightSide.value) {
-      setRightSize(openRightSideWidthPercent.value)
-    }
-  }
-
-  async function switchChatSide(bool?: boolean) {
-    openChatSide.value = bool ?? !openChatSide.value
-    if (openRightSide.value) {
-      setChatSize(openChatSideWidthPercent.value)
-    }
-  }
-
-  function setRightSize(value?: number) {
-    const { resultPercent, result } = calculateResult(value ?? openRightSideWidthPercent.value)
-    openRightSideWidthPercent.value = mid(maxRightPercent.value, resultPercent, rightLimit.value)
-    rightWidth.value = mid(maxRightWidth, result, rightLimitWidth)
-  }
-
-  function setChatSize(value?: number) {
-    const { resultPercent, result } = calculateResult(value ?? openChatSideWidthPercent.value)
-    openChatSideWidthPercent.value = mid(maxChatPercent.value, resultPercent, rightLimit.value)
-    chatWidth.value = mid(maxChatWidth, result, rightLimitWidth)
+  function setChatSideWidth(percent?: number) {
+    const pixelValue = ((percent ?? chatSideWidthPercent.value) * chatAvailableWidth.value) / 100
+    chatSideWidth.value = mid(maxChatWidth, pixelValue, minRightSideWidth)
   }
 
   async function initData() {
     const result = await invoke<ResultType<LocalSettings>>('get_local_data')
     if (result.status && result.data) {
-      openLeftSide.value = result?.data?.open_left_side || true
-      leftSideWidthPercent.value = result?.data?.left_side_width_percent || minLeftSideWidthPercent.value
-      openRightSide.value = result?.data?.open_right_side || false
-      openChatSide.value = result?.data?.open_chat_side || false
-      openRightSideWidthPercent.value = result?.data?.open_right_side_width_percent || defaultRightSideWidthPercent.value
-      openChatSideWidthPercent.value = result.data.open_chat_side_width_percent || defaultRightSideWidthPercent.value
-      setLeftWidth(leftSideWidthPercent.value)
-      setRightSize(openRightSideWidthPercent.value)
-      setChatSize(openChatSideWidthPercent.value)
+      switchLeftSide(result?.data?.open_left_side ?? true)
+      switchRightSide(result?.data?.open_right_side ?? false)
+      switchChatSide(result?.data?.open_chat_side ?? false)
     }
   }
 
   async function init() {
-    initData()
+    await initData()
   }
 
   async function resize() {
     fullWidth.value = window?.innerWidth
   }
-  watchDebounced([
-    () => openLeftSide.value,
-    () => leftSideWidthPercent.value,
-    () => openRightSide.value,
-    () => openChatSide.value,
-    () => openRightSideWidthPercent.value,
-    () => openChatSideWidthPercent.value,
-  ], () => {
+
+  function saveLocalData() {
     invoke('set_local_data', {
       params: {
         open_left_side: openLeftSide.value,
-        left_side_width_percent: leftSideWidthPercent.value,
+        left_side_width: leftSideWidth.value,
         open_right_side: openRightSide.value,
         open_chat_side: openChatSide.value,
-        open_right_side_width_percent: openRightSideWidthPercent.value,
-        open_chat_side_width_percent: openChatSideWidthPercent.value,
+        right_side_width: rightSideWidth.value,
+        chat_side_width: chatSideWidth.value,
       },
     })
+  }
+  watchDebounced([
+    () => openLeftSide.value,
+    () => leftSideWidth.value,
+    () => openRightSide.value,
+    () => openChatSide.value,
+    () => rightSideWidth.value,
+    () => chatSideWidth.value,
+  ], () => {
+    if (Object.values(disabledStates).some(v => v)) {
+      return
+    }
+
+    saveLocalData()
   }, { debounce: 200 })
 
-  return { leftSideWidthPercent, minLeftSideWidthPercent, setLeftWidth, init, defaultLeftSideWidth, switchLiftTab, openLeftSide, resize, minHeaderSize, minHeaderRightSize, openRightSide, switchRightSide, openChatSide, switchChatSide, openRightSideWidthPercent, openChatSideWidthPercent, setRightSize, setChatSize, rightLimit, maxRightPercent, maxChatPercent }
+  return { leftSideWidthPercent, rightSideWidthPercent, chatSideWidthPercent, minLeftSideWidthPercent, minRightSideWidthPercent, minChatSideWidthPercent, setLeftSideWidth, init, defaultRightSideWidth, switchLeftSide, openLeftSide, resize, openRightSide, switchRightSide, openChatSide, switchChatSide, setRightSideWidth, setChatSideWidth, maxRightPercent, maxChatPercent, disabledStates, maxLiftPercent }
 })

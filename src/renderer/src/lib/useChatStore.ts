@@ -1,10 +1,18 @@
-import type { MsgItem, MsgItemOption, SessionSummaryItem } from '~/types'
+import type { Chunk, MsgItem, MsgItemOption, ReasoningDeltaChunk, SessionSummaryItem, StructuredContent, TextDeltaChunk } from '~/types'
 import { defineStore } from 'pinia'
 import { ref, toRaw } from 'vue'
 import useMoveable from './useMoveable'
 import useProperty from './useProperty'
 
 const invoke = window.api.invoke
+
+/**
+ * 追加文本
+ * 简单拼接，不做额外处理
+ */
+function appendText(currentText: string, newText: string): string {
+  return `${currentText}${newText}`
+}
 
 export const useChatStore = defineStore('chat', () => {
   // State
@@ -69,9 +77,59 @@ export const useChatStore = defineStore('chat', () => {
     messages.value = data
   }
 
-  function localMessagePushChunk(text: string, index: number) {
-    messages.value[index].content += text
-    messages.value[index].state = 'ing'
+  function localMessagePushChunk(chunk: Chunk, index: number) {
+    const message = messages.value[index]
+    message.state = 'ing'
+
+    // 解析现有 content 或创建新的结构
+    let structured: StructuredContent
+    try {
+      structured = JSON.parse(message.content || '{"chunks":[]}')
+    }
+    catch {
+      structured = { chunks: [] }
+    }
+
+    // 根据 chunk 类型处理（需要同时匹配 runId 和 payload.id）
+    const existingIndex = structured.chunks.findIndex(c => c.runId === chunk.runId && c.payload.id === chunk.payload.id)
+
+    switch (chunk.type) {
+      case 'text-delta':
+        if (existingIndex >= 0) {
+          const existingChunk = structured.chunks[existingIndex] as TextDeltaChunk
+          existingChunk.payload.text = appendText(existingChunk.payload.text, chunk.payload.text)
+        }
+        else {
+          structured.chunks.push(chunk)
+        }
+        break
+
+      case 'reasoning-delta':
+        if (existingIndex >= 0) {
+          const existingChunk = structured.chunks[existingIndex] as ReasoningDeltaChunk
+          existingChunk.payload.text = appendText(existingChunk.payload.text, chunk.payload.text)
+        }
+        else {
+          structured.chunks.push(chunk)
+        }
+        break
+
+      case 'tool-call':
+        if (existingIndex >= 0) {
+          // 更新工具调用
+          structured.chunks[existingIndex] = chunk
+        }
+        else {
+          structured.chunks.push(chunk)
+        }
+        break
+
+      case 'finish':
+        structured.chunks.push(chunk)
+        break
+    }
+
+    messages.value[index].content = JSON.stringify(structured)
   }
 
   function createNewConversation() {
@@ -87,13 +145,18 @@ export const useChatStore = defineStore('chat', () => {
   function startAgentChat(message: string) {
     const property = useProperty()
     const moveable = useMoveable()
-    const pageDesignData = JSON.parse(JSON.stringify(toRaw(moveable.pageDesignData)))
-    const currentProperty = JSON.parse(JSON.stringify(toRaw(property.currentProperty)))
+    const rowPageDesignData = toRaw?.(moveable?.pageDesignData)
+    const rowCurrentProperty = toRaw?.(property?.currentProperty)
+    const pageDesignData = rowPageDesignData ? JSON.parse(JSON.stringify(rowPageDesignData)) : undefined
+    const currentProperty = rowCurrentProperty ? JSON.parse(JSON.stringify(rowCurrentProperty)) : undefined
 
     invoke('agent_chat', {
       message,
       currentProperty,
       pageDesignData,
+      // Memory 参数 - 用于保持对话上下文
+      threadId: session_id.value ? String(session_id.value) : undefined,
+      resourceId: 'default-user', // 可以改成实际的用户 ID
     })
   }
   function stopAgentChat() {

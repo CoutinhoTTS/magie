@@ -3,7 +3,6 @@
 interface ImportMetaEnv {
   readonly VITE_DB_NAME?: string
   readonly VITE_CHAT_DB_NAME?: string
-  
 
 }
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed, onBeforeMount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeMount, onMounted, ref } from 'vue'
 import Content from '@/layout/Content.vue'
 import Header from '@/layout/Header.vue'
 import LeftSide from '@/layout/LeftSide.vue'
@@ -16,8 +16,9 @@ const side = useSideSetting()
 
 function handleResize({ panes }) {
   if (Array.isArray(panes) && panes.length === 2)
-    side.setLeftWidth(panes[0].size)
+    side.setLeftSideWidth(panes[0].size)
 }
+
 const second = computed(() => {
   if (side.openLeftSide) {
     return 100 - side.leftSideWidthPercent
@@ -27,6 +28,7 @@ const second = computed(() => {
 
 onMounted(async () => {
   await side.init()
+  await nextTick()
   hasInit.value = true
 })
 </script>
@@ -40,7 +42,7 @@ onMounted(async () => {
     <Pane
       v-if="side.openLeftSide"
       :min-size="side.minLeftSideWidthPercent"
-      :max-size="50"
+      :max-size="side.maxLiftPercent"
       :size="side.leftSideWidthPercent"
     >
       <LeftSide />

@@ -25,7 +25,7 @@ export interface ModelItem {
   id?: number
   name: string
   url: string
-  compatible_type: 'OpenAI' | 'Anthropic' | 'Google'
+  compatible_type: string
   api_key: string
   selected?: boolean
 }
@@ -50,11 +50,11 @@ export interface DbSetResponse {
 
 export interface LocalSettings {
   open_left_side: boolean
-  left_side_width_percent: number
+  left_side_width: number
   open_right_side: boolean
   open_chat_side: boolean
-  open_right_side_width_percent: number
-  open_chat_side_width_percent: number
+  right_side_width: number
+  chat_side_width: number
 }
 
 export interface MsgItem {
@@ -95,4 +95,63 @@ export interface CursorItem {
   id: number
   session_id: string
   last_message_id: number
+}
+
+// ========== Chunk Types for Structured Content ==========
+
+// Chunk 类型
+export type ChunkType = 'text-delta' | 'tool-call' | 'reasoning-delta' | 'finish'
+
+// 基础 Chunk 结构
+export interface BaseChunk {
+  type: ChunkType
+  runId: string
+  from?: string
+  payload: {
+    id: string
+  }
+}
+
+// Text Delta Chunk
+export interface TextDeltaChunk extends BaseChunk {
+  type: 'text-delta'
+  payload: {
+    id: string
+    text: string
+  }
+}
+
+// Tool Call Chunk
+export interface ToolCallChunk extends BaseChunk {
+  type: 'tool-call'
+  payload: {
+    id: string
+    toolName: string
+    args?: Record<string, any>
+  }
+}
+
+// Reasoning Delta Chunk
+export interface ReasoningDeltaChunk extends BaseChunk {
+  type: 'reasoning-delta'
+  payload: {
+    id: string
+    text: string
+  }
+}
+
+// Finish Chunk
+export interface FinishChunk extends BaseChunk {
+  type: 'finish'
+  payload: {
+    id: string
+    reason: string
+  }
+}
+
+export type Chunk = TextDeltaChunk | ToolCallChunk | ReasoningDeltaChunk | FinishChunk
+
+// 结构化消息内容
+export interface StructuredContent {
+  chunks: Chunk[]
 }

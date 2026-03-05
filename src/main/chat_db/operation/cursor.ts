@@ -1,8 +1,8 @@
 import type { ResultType } from '../../utils/result'
 import type { CursorItem } from '~/types'
 import { eq } from 'drizzle-orm'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 /**

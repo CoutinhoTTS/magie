@@ -7,21 +7,23 @@ export function getNestedValue(obj: any, path: string): any {
   const keys = path.split('.')
   let result = obj
   for (const key of keys) {
-    if (result == null)
+    if (result === null)
       return undefined
 
     const arrayMatch = key.match(/^(.+)\[(\d+|number)\]$/)
     if (arrayMatch) {
       const [, prop, index] = arrayMatch
       result = result[prop]
-      if (result == null)
+      if (result === null)
         return undefined
       if (index === 'number') {
         result = result[0]
-      } else {
+      }
+      else {
         result = result[Number.parseInt(index, 10)]
       }
-    } else {
+    }
+    else {
       result = result[key]
     }
   }
@@ -39,7 +41,7 @@ export function setNestedValue(obj: any, path: string, value: any): void {
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i]
-    if (current[key] == null || typeof current[key] !== 'object') {
+    if (current[key] === null || typeof current[key] !== 'object') {
       current[key] = {}
     }
     current = current[key]

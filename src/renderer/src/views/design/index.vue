@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { onMounted, onUnmounted } from 'vue'
 import components from '@/components/businessUI/index'
 import { DesignTree } from '@/components/customUI/designTree/idnex'
@@ -55,12 +54,7 @@ onUnmounted(() => {
 
 <template>
   <div id="design" class=" w-full h-full flex justify-between items-center relative overflow-hidden">
-    <div
-      class="w-45 h-full py-2 flex flex-col justify-between items-center gap-2"
-      :class="{
-        'pl-2': !side.openLeftSide,
-      }"
-    >
+    <div class="w-45 h-full py-2 flex flex-col justify-between items-center gap-2 pl-2">
       <div class=" w-full text-sm opacity-50">
         components
       </div>

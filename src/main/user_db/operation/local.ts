@@ -1,7 +1,7 @@
 import type { ResultType } from '../../utils/result'
 import type { LocalSettings } from '~/types'
-import db from '../db'
 import Result from '../../utils/result'
+import db from '../db'
 import * as schema from '../schema'
 
 export async function getLocalData(): Promise<ResultType<LocalSettings>> {
@@ -16,22 +16,22 @@ export async function getLocalData(): Promise<ResultType<LocalSettings>> {
     if (rows.length === 0) {
       settings = {
         open_left_side: true,
-        left_side_width_percent: 0,
+        left_side_width: 0,
         open_right_side: false,
         open_chat_side: false,
-        open_right_side_width_percent: 0,
-        open_chat_side_width_percent: 0,
+        right_side_width: 0,
+        chat_side_width: 0,
       }
     }
     else {
       const row = rows[0]
       settings = {
         open_left_side: row.open_left_side ?? true,
-        left_side_width_percent: row.left_side_width_percent ?? 0,
+        left_side_width: row.left_side_width ?? 0,
         open_right_side: row.open_right_side ?? false,
         open_chat_side: row.open_chat_side ?? false,
-        open_right_side_width_percent: row.open_right_side_width_percent ?? 0,
-        open_chat_side_width_percent: row.open_chat_side_width_percent ?? 0,
+        right_side_width: row.right_side_width ?? 0,
+        chat_side_width: row.chat_side_width ?? 0,
       }
     }
   }
