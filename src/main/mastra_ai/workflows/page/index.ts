@@ -7,6 +7,7 @@ import step3ModifyProperty from './steps/step3.modifyProperty'
 export const DefaultInputSchema = z.object({
   option: z.object({
     message: z.string(),
+    currentProperty: z.any(),
   }),
 })
 const pageWorkflow = createWorkflow({

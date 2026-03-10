@@ -6,6 +6,13 @@ import useProperty from './useProperty'
 
 const invoke = window.api.invoke
 
+interface patchItem {
+  newValue: any
+  oldValue: any
+  prop: string
+  reason: string
+}
+
 /**
  * 追加文本
  * 简单拼接，不做额外处理
@@ -19,6 +26,7 @@ export const useChatStore = defineStore('chat', () => {
   const session_id = ref<number | null>(null)
   const messages = ref<Array<MsgItem>>([])
   const sessionList = ref<Array<SessionSummaryItem>>([])
+  const patchs = ref<patchItem[]>([])
 
   async function getSessionList(keyword?: string) {
     const { data } = await invoke('chat_get_top_session_summary', {
@@ -163,11 +171,19 @@ export const useChatStore = defineStore('chat', () => {
     invoke('agent_chat', false)
   }
 
+  function setPatchs(value: patchItem[]) {
+    patchs.value = value
+  }
+  function clearPatchs() {
+    patchs.value = []
+  }
+
   return {
     // State
     session_id,
     messages,
     sessionList,
+    patchs,
 
     getSessionList,
     newSession,
@@ -180,5 +196,7 @@ export const useChatStore = defineStore('chat', () => {
     setSessionId,
     startAgentChat,
     stopAgentChat,
+    setPatchs,
+    clearPatchs,
   }
 })

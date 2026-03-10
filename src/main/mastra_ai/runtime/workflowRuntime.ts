@@ -51,20 +51,21 @@ export default class {
     return this.setCurrentWorkflow(parmas?.id || 'gateway-workflow', parmas.option)
   }
 
-  async setCurrentWorkflow<T extends WorkflowID>(id: T, option: any): Promise<WorkflowResultMap[T] | undefined> {
-    // this.currentWorkflowId = id
+  async setCurrentWorkflow<T extends WorkflowID>(id: T, option: any) {
     this.currentWorkflow = getWorkflowById(id) as Workflow | null
     if (!this.currentWorkflow) {
       console.error(`Workflow ${id} not found`)
-      return undefined
+      return
     }
     const run = await this.currentWorkflow.createRun()
     this.currentRunId = run.runId
     this.activeRuns.set(this.currentRunId, run)
     this.watchWorkflow(run)
+    // console.log('唯一匹配:', util.inspect(option, { depth: null, colors: true }))
     const result = await run.start({
-      inputData: { option },
+      inputData: { option: structuredClone(option) },
     })
+    // console.log('唯二匹配:', util.inspect(option, { depth: null, colors: true }))
 
     if (result?.status === 'success') {
       const _result = result.result as WorkflowResultMap[T]
@@ -75,8 +76,6 @@ export default class {
         }
       }
     }
-
-    return undefined
   }
 
   private watchWorkflow(run: Run) {
@@ -92,6 +91,7 @@ export default class {
         // 根据暂停类型发送不同事件
         if (['confirm_modify'].includes(suspendPayload?.type)) {
           // 修改确认事件 - 包含新旧值用于 diff
+          this.wc = this.wc ?? this.context?.getCurrentWc() ?? null
           this.wc?.send('workflow:confirm_modify', {
             runId: this.currentRunId,
             stepId: event.payload.id,
@@ -146,6 +146,8 @@ export default class {
   }
 
   async resumeWorkflow(runId: string, resumeData: any): Promise<any> {
+    console.log('runId====>', runId)
+    console.log('resumeData====>', resumeData)
     const run = this.activeRuns.get(runId)
     if (!run) {
       throw new Error(`No active workflow run found: ${runId}`)

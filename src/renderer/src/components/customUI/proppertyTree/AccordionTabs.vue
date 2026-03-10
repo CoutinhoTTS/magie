@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { computed } from 'vue'
-import components from '@/components/businessUI/index.tsx'
+import components from '@/components/businessUI/index'
 import {
   Accordion,
   AccordionContent,

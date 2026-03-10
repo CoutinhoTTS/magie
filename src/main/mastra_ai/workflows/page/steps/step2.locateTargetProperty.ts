@@ -296,10 +296,8 @@ export default createStep({
     if (!agent) {
       throw new Error('Agent not found')
     }
-
     const locateTarget = async (): Promise<{ path: string, currentValue: string, type: string, action: string }> => {
       let streamError: Error | null = null
-
       const stream = await agent.stream(userInput, {
         onChunk: (chunk: any) => {
           wc?.send('llm:streaming', chunk)
@@ -308,28 +306,23 @@ export default createStep({
           streamError = error instanceof Error ? error : new Error(String(error))
         },
       })
-
       const full = await stream.getFullOutput()
-
       if (streamError) {
         throw streamError
       }
-
-      console.error('Agent 原始返回:', full.text)
       const extracted = parseAgentResult(full.text)
-
       if (!extracted || extracted.target.length === 0) {
         throw new Error('Agent 无法提取目标关键词')
       }
 
-      console.error('提取的目标:', extracted.target)
-      console.error('行为:', extracted.action)
-      console.error('序数提示:', extracted.indexHint)
+      // console.error('提取的目标:', extracted.target)
+      // console.error('行为:', extracted.action)
+      // console.error('序数提示:', extracted.indexHint)
 
       // Step 3: 使用 Fuse.js 综合匹配，只取最优解
       const bestMatch = fuzzyMatchBest(index, extracted.target)
 
-      console.error('最优匹配:', util.inspect(bestMatch, { depth: null, colors: true }))
+      // console.error('最优匹配:', util.inspect(bestMatch, { depth: null, colors: true }))
 
       if (!bestMatch) {
         throw new Error('无匹配结果')

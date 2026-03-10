@@ -3,6 +3,7 @@ import { useChatStore } from '@/lib/useChatStore'
 import ChatHeader from './ChatHeader.vue'
 import ChatInput from './ChatInput.vue'
 import ChatMessageList from './ChatMessageList.vue'
+import ChatSelect from './ChatSelect.vue'
 import { useChat } from './composables/useChat'
 import ModelSettings from './ModelSettings.vue'
 
@@ -25,6 +26,7 @@ const {
   addNewChat,
   closeModelSeting,
   setSessionId,
+  patchVisible,
 } = useChat()
 
 function handleSend() {
@@ -67,5 +69,7 @@ function handleStop() {
       @add-model="addModel"
       @delete-model="deleteModel"
     />
+    {{ patchVisible }}
+    <ChatSelect v-if="patchVisible" />
   </div>
 </template>

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { TextDeltaChunk } from '~/types'
 import { randomUUID } from 'node:crypto'
 import { createStep } from '@mastra/core/workflows'
@@ -103,11 +104,9 @@ export default createStep({
     // 获取 wc 和 agent
     const wc = getWC()
     const agent = getAgent('pageAgent')
-
     if (!agent) {
       throw new Error('Agent not found')
     }
-
     // 如果有 resumeData，说明是用户确认后恢复
     if (resumeData) {
       if (!resumeData.confirmed) {
@@ -139,9 +138,11 @@ export default createStep({
     const prompt = buildModifyPrompt(message, targetProperty)
     const stream = await agent.stream(prompt, {
       onChunk: (chunk: any) => {
+        console.log('chunk', chunk)
         wc?.send('llm:streaming', chunk)
       },
       onFinish: async (result: any) => {
+        console.log('result.text', result.text)
         // 解析结果
         const parsed = parseAgentResult(result.text)
         parsedChanges = parsed.changes
@@ -153,7 +154,6 @@ export default createStep({
           wc?.send('llm:finished')
           return
         }
-
         // 有变更，暂停工作流，向前端抛出选择确认
         await suspend({
           type: 'confirm_modify',

@@ -15,6 +15,7 @@ export interface UseChatReturn {
   currentModelId: Readonly<ComputedRef<number | undefined>>
   placeholder: ComputedRef<string | undefined>
   model: ReturnType<typeof useModel>
+  patchVisible: ReturnType<typeof ref<boolean>>
 
   // 方法
   send: () => Promise<void>
@@ -39,7 +40,7 @@ export function useChat(): UseChatReturn {
   const model = useModel()
   const selectedModel = ref<null | ModelItem>(null)
   const isStreaming = ref(false)
-
+  const patchVisible = ref(false)
   const chatStore = useChatStore()
 
   const currentModelId = computed({
@@ -61,13 +62,15 @@ export function useChat(): UseChatReturn {
   })
 
   async function workflowConfirmModify(_event: any, data: { runId: string, stepId: string, patch: any, summary: string }) {
-    // 测试：直接确认并恢复工作流
-    const invoke = window.api.invoke
-    // const result =
-    await invoke('workflow:resume', {
-      runId: data.runId,
-      resumeData: { confirmed: true },
-    })
+    chatStore.setPatchs(data.patch)
+    showSelect()
+    // // 测试：直接确认并恢复工作流
+    // const invoke = window.api.invoke
+    // // const result =
+    // await invoke('workflow:resume', {
+    //   runId: data.runId,
+    //   resumeData: { confirmed: true },
+    // })
   }
 
   const placeholder = computed(() => isEmpty.value ? 'Chat' : void 0)
@@ -170,6 +173,7 @@ export function useChat(): UseChatReturn {
   }
 
   async function streamingChunk(_, chunk) {
+    // console.log('chunk', chunk)
     // const { payload: { text } } = chunk
     const assistantIndex = chatStore.getAssistantIndex({
       state: ['ing', 'no'],
@@ -258,6 +262,10 @@ export function useChat(): UseChatReturn {
     chatStore.setSessionId(val)
   }
 
+  function showSelect() {
+    patchVisible.value = true
+  }
+
   watchDebounced(() => selectedModel.value, async (val) => {
     if (val) {
       const { api_key, url, name, compatible_type } = val
@@ -281,7 +289,7 @@ export function useChat(): UseChatReturn {
     currentModelId,
     placeholder,
     model,
-
+    patchVisible,
     // 方法
     send,
     stopChat,
