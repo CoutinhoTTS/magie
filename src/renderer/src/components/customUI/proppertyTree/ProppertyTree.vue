@@ -19,10 +19,6 @@ interface PropertyItem {
   children?: any[]
 }
 
-defineProps({
-  propertyConfig: Object as () => PropertyItem[] | undefined,
-})
-
 const property = useProperty()
 const propertyConfig = computed(() => {
   const component = components.find(com => com.name === property?.currentProperty?.tagName)

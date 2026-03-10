@@ -6,32 +6,30 @@ import PropertyField from '@/components/customUI/proppertyTree/PropertyField.vue
 
 const props = defineProps<{
   visible: boolean
+  modelValue?: ModelItem | null
   modelList: ModelItem[]
-  selectedModel?: ModelItem | null
   formConfig: any[]
 }>()
 
 const emit = defineEmits<{
-  updateSelectedModel: [value: ModelItem]
+  'update:modelValue': [value: ModelItem | null]
   close: []
   addModel: []
   deleteModel: []
-  saveModel: [value: ModelItem]
 }>()
 
-const localModel = computed({
-  get: () => props.selectedModel,
-  set: val => val && emit('updateSelectedModel', val),
+const selectedModel = computed({
+  get: () => props.modelValue ?? null,
+  set: (val) => emit('update:modelValue', val ?? null),
 })
 
-function selectedModelFn(value: ModelItem) {
-  emit('updateSelectedModel', value)
+function selectModel(value: ModelItem) {
+  selectedModel.value = value
 }
 
 function updateModelField(key: keyof ModelItem, value: any) {
-  if (localModel.value) {
-    const updated = { ...localModel.value, [key]: value }
-    emit('updateSelectedModel', updated)
+  if (selectedModel.value) {
+    selectedModel.value = { ...selectedModel.value, [key]: value }
   }
 }
 </script>
@@ -56,7 +54,7 @@ function updateModelField(key: keyof ModelItem, value: any) {
             :class="{
               'bg-gray-200': selectedModel && selectedModel?.id === value?.id,
             }"
-            @click="selectedModelFn(value)"
+            @click="selectModel(value)"
           >
             <span>
               {{ value.name }}

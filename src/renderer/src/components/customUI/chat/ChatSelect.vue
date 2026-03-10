@@ -1,5 +1,46 @@
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
+import { useChatStore } from '@/lib/useChatStore'
+
+const emit = defineEmits<{
+  close: []
+}>()
+
+const chatStore = useChatStore()
+const { getPatchingEvent, removePatchingEvent, getWorkflowRunId, setPatchs } = chatStore
+const invoke = window.api.invoke
+
+async function resumeWorkflow(confirmed: boolean) {
+  const runId = getWorkflowRunId()
+  if (runId) {
+    await invoke('workflow:resume', {
+      runId,
+      resumeData: { confirmed },
+    })
+  }
+}
+
+async function cancel() {
+  removePatchingEvent()
+  await resumeWorkflow(false)
+  setPatchs([])
+  emit('close')
+}
+
+async function agree() {
+  const patching = getPatchingEvent()
+  if (Array.isArray(patching) && patching.length) {
+    patching.forEach((fn) => {
+      if (typeof fn === 'function') {
+        fn()
+      }
+    })
+  }
+  await resumeWorkflow(true)
+  removePatchingEvent()
+  setPatchs([])
+  emit('close')
+}
 </script>
 
 <template>
@@ -11,10 +52,10 @@ import { Button } from '@/components/ui/button'
         是否应用 AI 的修改？
       </p>
       <div class=" flex flex-col gap-3">
-        <Button variant="outline">
+        <Button variant="outline" @click.stop="cancel">
           拒绝
         </Button>
-        <Button>
+        <Button @click.stop="agree">
           同意
         </Button>
       </div>

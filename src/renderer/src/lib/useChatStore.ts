@@ -27,6 +27,8 @@ export const useChatStore = defineStore('chat', () => {
   const messages = ref<Array<MsgItem>>([])
   const sessionList = ref<Array<SessionSummaryItem>>([])
   const patchs = ref<patchItem[]>([])
+  const workflowRunId = ref<string | null>(null)
+  let patching: (() => void)[] = []
 
   async function getSessionList(keyword?: string) {
     const { data } = await invoke('chat_get_top_session_summary', {
@@ -167,6 +169,7 @@ export const useChatStore = defineStore('chat', () => {
       resourceId: 'default-user', // 可以改成实际的用户 ID
     })
   }
+
   function stopAgentChat() {
     invoke('agent_chat', false)
   }
@@ -174,8 +177,20 @@ export const useChatStore = defineStore('chat', () => {
   function setPatchs(value: patchItem[]) {
     patchs.value = value
   }
-  function clearPatchs() {
-    patchs.value = []
+  function setWorkflowRunId(runId: string) {
+    workflowRunId.value = runId
+  }
+  function getWorkflowRunId() {
+    return workflowRunId.value
+  }
+  function removePatchingEvent() {
+    patching = []
+  }
+  function getPatchingEvent() {
+    return patching
+  }
+  function addPatchingEvent(fn = () => {}) {
+    patching.push(fn)
   }
 
   return {
@@ -184,6 +199,7 @@ export const useChatStore = defineStore('chat', () => {
     messages,
     sessionList,
     patchs,
+    workflowRunId,
 
     getSessionList,
     newSession,
@@ -197,6 +213,10 @@ export const useChatStore = defineStore('chat', () => {
     startAgentChat,
     stopAgentChat,
     setPatchs,
-    clearPatchs,
+    setWorkflowRunId,
+    getWorkflowRunId,
+    addPatchingEvent,
+    removePatchingEvent,
+    getPatchingEvent,
   }
 })

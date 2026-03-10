@@ -200,19 +200,21 @@ function parseAgentResult(text: string): { target: string[], action: string, ind
 function fuzzyMatchBest(index: EditableIndexItem[], targetKeywords: string[]): EditableIndexItem | null {
   const fuse = new Fuse(index, {
     keys: [
-      { name: 'path', weight: 0.2 },
-      { name: 'preview', weight: 0.2 },
+      { name: 'path', weight: 0.1 },
+      { name: 'preview', weight: 0.1 },
       { name: 'label', weight: 0.4 }, // label 权重最高
-      { name: 'description', weight: 0.2 }, // description 提供额外上下文
+      { name: 'description', weight: 0.4 }, // description 提供额外上下文
     ],
-    threshold: 0.4,
+    threshold: 0.6,
     includeScore: true,
     findAllMatches: true,
+    useExtendedSearch: true,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
   })
 
   // 对每个关键词进行搜索，收集所有匹配
   const pathScores = new Map<string, { item: EditableIndexItem, matchCount: number, totalScore: number }>()
-
   for (const keyword of targetKeywords) {
     const results = fuse.search(keyword)
     for (const result of results) {
@@ -258,9 +260,9 @@ function fuzzyMatchBest(index: EditableIndexItem[], targetKeywords: string[]): E
         return b.matchCount - a.matchCount
       }
       return a.combinedScore - b.combinedScore
-    })[0]
+    })
 
-  return bestResult?.item || null
+  return bestResult?.[0]?.item || null
 }
 
 export default createStep({
@@ -315,14 +317,8 @@ export default createStep({
         throw new Error('Agent 无法提取目标关键词')
       }
 
-      // console.error('提取的目标:', extracted.target)
-      // console.error('行为:', extracted.action)
-      // console.error('序数提示:', extracted.indexHint)
-
       // Step 3: 使用 Fuse.js 综合匹配，只取最优解
       const bestMatch = fuzzyMatchBest(index, extracted.target)
-
-      // console.error('最优匹配:', util.inspect(bestMatch, { depth: null, colors: true }))
 
       if (!bestMatch) {
         throw new Error('无匹配结果')

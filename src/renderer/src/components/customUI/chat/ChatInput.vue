@@ -1,6 +1,7 @@
 <script setup lang="tsx">
+import type { ModelItem } from '~/types'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
   Select,
   SelectContent,
@@ -11,24 +12,22 @@ import {
 import useProperty from '@/lib/useProperty'
 
 const props = defineProps<{
-  inputContent?: string
-  isEmpty?: boolean
   isStreaming?: boolean
   model: any
 }>()
 
 const emit = defineEmits<{
-  'update:inputContent': [value: string]
-  'send': []
+  'send': [content: string]
   'stop': []
-  'inputing': [e?: InputEvent]
-  'paste': [e: ClipboardEvent]
-  'keydown': [e: KeyboardEvent]
 }>()
 
 const property = useProperty()
 
-const placeholder = computed(() => props.isEmpty ? 'Chat' : void 0)
+// 输入框内部状态
+const inputContent = ref('')
+const isEmpty = ref(true)
+
+const placeholder = computed(() => isEmpty.value ? 'Chat' : void 0)
 
 const currentModelId = computed({
   get: () => props.model?.currentModel?.id,
@@ -36,6 +35,96 @@ const currentModelId = computed({
     props.model?.setCurrentModel(val)
   },
 })
+
+function inputing(e?: InputEvent) {
+  const el = (e?.target ?? document.querySelector('#magie-editor[contenteditable="true"]')) as HTMLElement
+  if (!el)
+    return
+  isEmpty.value = isEditableEmpty(el)
+  inputContent.value = el.innerText
+}
+
+function paste(e: ClipboardEvent) {
+  e.preventDefault()
+  const text = e.clipboardData?.getData('text/plain') ?? ''
+  const html = text.replace(/\n/g, '<br>')
+
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0)
+    return
+
+  const range = selection.getRangeAt(0)
+  range.deleteContents()
+
+  const fragment = range.createContextualFragment(html)
+  const lastNode = fragment.lastChild
+  range.insertNode(fragment)
+
+  if (lastNode) {
+    range.setStartAfter(lastNode)
+    range.setEndAfter(lastNode)
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+  inputing()
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault()
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      const br = document.createElement('br')
+      range.insertNode(br)
+      range.setStartAfter(br)
+      range.setEndAfter(br)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+    return
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !props.isStreaming) {
+    e.preventDefault()
+    handleSend()
+  }
+}
+
+function clearInput() {
+  inputContent.value = ''
+  isEmpty.value = true
+  const el = document.querySelector('#magie-editor[contenteditable="true"]') as HTMLElement
+  if (el) {
+    el.innerHTML = ''
+  }
+}
+
+function isEditableEmpty(el: HTMLElement): boolean {
+  const childNodes = el?.childNodes || []
+  if (!childNodes.length)
+    return true
+  if (childNodes.length === 1) {
+    if (childNodes[0].nodeName === 'BR')
+      return true
+    if (childNodes[0].nodeName === 'DIV') {
+      return isEditableEmpty(childNodes[0] as HTMLElement)
+    }
+  }
+  return false
+}
+
+function handleSend() {
+  const content = inputContent.value.trim()
+  if (!content || props.isStreaming)
+    return
+  emit('send', content)
+  clearInput()
+}
+
+function handleStop() {
+  emit('stop')
+}
 </script>
 
 <template>
@@ -46,9 +135,9 @@ const currentModelId = computed({
         class="editor w-full max-h-60 p-2 outline-none text-sm focus:ring-0 overflow-y-auto relative"
         contenteditable="true"
         :data-placeholder="placeholder"
-        @input="emit('inputing', $event)"
-        @paste="emit('paste', $event)"
-        @keydown="emit('keydown', $event)"
+        @input="inputing($event as InputEvent)"
+        @paste="paste($event as ClipboardEvent)"
+        @keydown="handleKeydown($event as KeyboardEvent)"
       />
       <div class="w-full flex justify-between items-center border-t px-2 select-none">
         <div class="flex justify-start items-center flex-1 overflow-hidden gap-2">
@@ -65,16 +154,16 @@ const currentModelId = computed({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="value in model?.modelLit?.filter(v => v?.id) || []" :key="value.id!" :value="value.id!">
+                <SelectItem v-for="value in model?.modelLit?.filter((v: ModelItem) => v?.id) || []" :key="value.id!" :value="value.id!">
                   {{ value.name || '' }}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div class="flex justify-end-safe items-center text-2xl cursor-pointer" @click="!isStreaming && emit('send')">
+        <div class="flex justify-end-safe items-center text-2xl cursor-pointer" @click="!isStreaming && handleSend()">
           <Icon v-if="!isStreaming" icon="lets-icons:send-hor" />
-          <Icon v-else icon="fa6-regular:circle-stop" @click.stop="emit('stop')" />
+          <Icon v-else icon="fa6-regular:circle-stop" @click.stop="handleStop()" />
         </div>
       </div>
     </div>

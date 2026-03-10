@@ -34,14 +34,16 @@ const localValue = computed({
     emit('update:modelValue', val)
   },
 })
-function setNewValue() {
 
-}
 const diffValue = computed(() => {
-  const { patchs } = chatStore
+  const { patchs, addPatchingEvent } = chatStore
   const currentPath = `props.${props.currentPath?.split(':')[1]}`
   const patch = patchs.find(item => item.prop === currentPath)
-
+  if (patch) {
+    addPatchingEvent(() => {
+      localValue.value = patch.newValue
+    })
+  }
   return patch
 })
 </script>
